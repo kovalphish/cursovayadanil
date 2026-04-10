@@ -25,6 +25,13 @@ DEFAULT_IMAGE = "default.png"
 
 db = SQLAlchemy(app)
 
+# Исправление для PostgreSQL на Vercel
+@app.teardown_request
+def teardown_request(exception=None):
+    if exception:
+        db.session.rollback()
+    db.session.remove()
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
