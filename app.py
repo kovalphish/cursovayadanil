@@ -45,8 +45,8 @@ class Order(db.Model):
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'))
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='SET NULL'))
     product_name = db.Column(db.String(200))
     quantity = db.Column(db.Integer)
     price = db.Column(db.Float)
