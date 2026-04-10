@@ -66,6 +66,12 @@ with app.app_context():
     try: db.create_all()
     except: pass
 
+@app.teardown_request
+def teardown_request(exception=None):
+    if exception:
+        db.session.rollback()
+    db.session.remove()
+
 @app.route('/')
 def index():
     try: products = Product.query.limit(8).all()
@@ -250,28 +256,40 @@ def admin_product_edit(pid):
 @app.route('/admin/product/delete/<int:pid>')
 @login_required
 def admin_product_delete(pid):
-    product = Product.query.get(pid)
-    db.session.delete(product)
-    db.session.commit()
-    flash('Товар удален', 'success')
+    product = Product.query.get_or_404(pid)
+    try:
+        db.session.delete(product)
+        db.session.commit()
+        flash('Товар удален', 'success')
+    except:
+        db.session.rollback()
+        flash('Ошибка удаления товара', 'error')
     return redirect(url_for('admin'))
 
 @app.route('/admin/order/delete/<int:oid>')
 @login_required
 def admin_order_delete(oid):
-    order = Order.query.get(oid)
-    db.session.delete(order)
-    db.session.commit()
-    flash('Заказ удален', 'success')
+    order = Order.query.get_or_404(oid)
+    try:
+        db.session.delete(order)
+        db.session.commit()
+        flash('Заказ удален', 'success')
+    except:
+        db.session.rollback()
+        flash('Ошибка удаления заказа', 'error')
     return redirect(url_for('admin'))
 
 @app.route('/admin/order/status/<int:oid>', methods=['POST'])
 @login_required
 def admin_order_status(oid):
-    order = Order.query.get(oid)
-    order.status = request.form.get('status')
-    db.session.commit()
-    flash('Статус заказа обновлен', 'success')
+    order = Order.query.get_or_404(oid)
+    try:
+        order.status = request.form.get('status')
+        db.session.commit()
+        flash('Статус заказа обновлен', 'success')
+    except:
+        db.session.rollback()
+        flash('Ошибка обновления статуса', 'error')
     return redirect(url_for('admin'))
 
 application = app
