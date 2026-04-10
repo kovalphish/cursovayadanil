@@ -214,23 +214,27 @@ def admin():
 @login_required
 def admin_product_add():
     if request.method == 'POST':
-        name = request.form.get('name')
-        category = request.form.get('category')
-        price = float(request.form.get('price'))
-        stock = int(request.form.get('stock', 0))
-        description = request.form.get('description')
-        image = request.files.get('image')
-        image_filename = DEFAULT_IMAGE
-        if image and allowed_file(image.filename):
-            filename = secure_filename(image.filename)
-            ext = filename.rsplit('.', 1)[1].lower()
-            unique_filename = f"{uuid.uuid4().hex}.{ext}"
-            image.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-            image_filename = unique_filename
-        product = Product(name=name, category=category, price=price, stock=stock, description=description, image=image_filename)
-        db.session.add(product)
-        db.session.commit()
-        flash('Товар добавлен', 'success')
+        try:
+            name = request.form.get('name')
+            category = request.form.get('category')
+            price = float(request.form.get('price'))
+            stock = int(request.form.get('stock', 0))
+            description = request.form.get('description')
+            image = request.files.get('image')
+            image_filename = DEFAULT_IMAGE
+            if image and allowed_file(image.filename):
+                filename = secure_filename(image.filename)
+                ext = filename.rsplit('.', 1)[1].lower()
+                unique_filename = f"{uuid.uuid4().hex}.{ext}"
+                image.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+                image_filename = unique_filename
+            product = Product(name=name, category=category, price=price, stock=stock, description=description, image=image_filename)
+            db.session.add(product)
+            db.session.commit()
+            flash('Товар добавлен', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка: {str(e)}', 'error')
         return redirect(url_for('admin'))
     return render_template('product_form.html', title='Добавить товар', product=None)
 
